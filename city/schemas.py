@@ -9,8 +9,9 @@ class CityBase(BaseModel):
 class City(CityBase):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class CityCreate(CityBase):

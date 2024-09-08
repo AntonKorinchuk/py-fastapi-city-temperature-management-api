@@ -4,7 +4,7 @@ from pydantic.v1 import BaseSettings
 class Settings(BaseSettings):
     PROJECT_NAME: str = "CITY TEMPERATURE API"
 
-    DATABASE_URL: str = "sqlite:///./city_temperature.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./db.sqlite3"
 
     class Config:
         case_sensitive = True

@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
 
 from temperature import schemas
 from dependencies import get_db
@@ -11,11 +10,11 @@ from temperature.models import DBTemperature
 router = APIRouter()
 
 
-@router.get("/temperatures/", response_model=List[schemas.Temperature])
+@router.get("/temperatures/", response_model=list[schemas.Temperature])
 def read_temperatures(
     city_id: int | None = None,
     db: Session = Depends(get_db)
-) -> List[schemas.Temperature]:
+) -> list[schemas.Temperature]:
     temperatures = get_temperatures(db=db, city_id=city_id)
     if not temperatures:
         raise HTTPException(status_code=404, detail="Temperatures not found")
@@ -29,7 +28,7 @@ def read_temperatures(
 async def update_temperature(
     temperature_id: int,
     db: Session = Depends(get_db)
-) -> DBTemperature:
+) -> schemas.Temperature:
     db_temperature = (db.query(DBTemperature)
                       .filter(DBTemperature.id == temperature_id)
                       .first())

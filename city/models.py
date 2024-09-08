@@ -13,6 +13,5 @@ class DBCity(Base):
 
     temperature = relationship(
         "DBTemperature",
-        uselist=False,
-        backref="city"
+        back_populates="city",
     )

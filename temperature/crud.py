@@ -1,9 +1,8 @@
-import asyncio
 from datetime import datetime
 import os
 from typing import List, Type
 
-import requests
+import httpx
 from sqlalchemy.orm import Session
 
 from temperature.models import DBTemperature
@@ -21,9 +20,10 @@ def get_weather_api_key() -> str:
 async def fetch_temperature_data(city_name: str, api_key: str) -> dict:
     url = "http://api.weatherapi.com/v1/current.json"
     payload = {"key": api_key, "q": city_name}
-    response = await asyncio.to_thread(requests.get, url, params=payload)
-    response.raise_for_status()
-    return response.json()
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params=payload)
+        response.raise_for_status()
+        return response.json()
 
 
 def get_temperatures(
