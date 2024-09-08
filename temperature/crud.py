@@ -1,9 +1,9 @@
 from datetime import datetime
 import os
-from typing import List, Type
 
 import httpx
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from temperature.models import DBTemperature
 
@@ -26,14 +26,16 @@ async def fetch_temperature_data(city_name: str, api_key: str) -> dict:
         return response.json()
 
 
-def get_temperatures(
-        db: Session,
+async def get_temperatures(
+        db: AsyncSession,
         city_id: int | None = None
-) -> List[Type[DBTemperature]]:
-    queryset = db.query(DBTemperature)
-    if city_id:
-        queryset = queryset.filter(DBTemperature.city_id == city_id)
-    return queryset.all()
+) -> list[DBTemperature]:
+    async with db.begin():
+        query = select(DBTemperature)
+        if city_id:
+            query = query.filter(DBTemperature.city_id == city_id)
+        result = await db.execute(query)
+        return result.scalars().all()
 
 
 async def get_latest_temperature_from_external_api(
@@ -51,14 +53,16 @@ async def get_latest_temperature_from_external_api(
 
 
 async def update_city_temperature(
-        db: Session,
+        db: AsyncSession,
         db_temperature: DBTemperature
 ) -> DBTemperature:
     temperature, date_time = await (
         get_latest_temperature_from_external_api(db_temperature.city.name)
     )
-    db_temperature.temperature = temperature
-    db_temperature.date_time = date_time
-    db.commit()
-    db.refresh(db_temperature)
+    async with db.begin():
+        db_temperature.temperature = temperature
+        db_temperature.date_time = date_time
+        await db.commit()
+        await db.refresh(db_temperature)
+
     return db_temperature
